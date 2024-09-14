@@ -59,7 +59,21 @@ class Cable(Element):
 
         # YOUR CODE STARTS HERE
 
-        nodes_forces = NotImplemented
+        # Compute the vector from the first node to the second node
+        cable_vec = coordinates[1, :] - coordinates[0, :]
+
+        # Compute the actual length of the cable
+        vec_norm = np.linalg.norm(cable_vec)
+
+        # Check whether the cable is in tension or compression
+        if vec_norm < self.length:
+            # The cable is in compression, so the force is zero
+            nodes_forces = np.zeros((2, self.dim))
+        else:
+            # The cable is in tension, so the force is the linear spring force
+            force_magnitude = self.stiffness * (vec_norm - self.length)
+            force_vec = force_magnitude * cable_vec / vec_norm
+            nodes_forces = np.array([force_vec, -force_vec])
 
         # YOUR CODE ENDS HERE, THE VARIABLE `nodes_forces` SHOULD HAVE BEEN DEFINED
 
@@ -78,7 +92,14 @@ class Cable(Element):
 
         # YOUR CODE STARTS HERE
 
-        elastic_energy = NotImplemented
+        elastic_energy = (
+            0.5
+            * self.stiffness
+            * max(
+                np.linalg.norm(coordinates[1, :] - coordinates[0, :]) - self.length, 0
+            )
+            ** 2
+        )
 
         # YOUR CODE ENDS HERE, THE VARIABLE `elastic_energy` SHOULD HAVE BEEN DEFINED
 
