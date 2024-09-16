@@ -57,42 +57,21 @@ class Cable(Element):
         #           - Your implementation can assume that self.dim is equal to 3 for the tests to pass.
         #           - The variable `self.stiffness` is the stiffness of the cable.
 
-        # YOUR CODE STARTS HERE
-
-        # Compute the vector from the first node to the second node
-        cable_vec = coordinates[1, :] - coordinates[0, :]
-
-        # Compute the actual length of the cable
-        vec_norm = np.linalg.norm(cable_vec)
-
-        # Check whether the cable is in tension or compression
-        if vec_norm < self.length:
-            # The cable is in compression, so the force is zero
-            nodes_forces = np.zeros((2, self.dim))
-        else:
-            # The cable is in tension, so the force is the linear spring force
-            force_magnitude = self.stiffness * (vec_norm - self.length)
-            force_vec = force_magnitude * cable_vec / vec_norm
-            nodes_forces = np.array([force_vec, -force_vec])
-
-        # YOUR CODE ENDS HERE, THE VARIABLE `nodes_forces` SHOULD HAVE BEEN DEFINED
-
-        return np.asarray(nodes_forces)
+        cable_vector = coordinates[1, :] - coordinates[0, :]
+        vector_norm = np.linalg.norm(cable_vector)
+        force_magnitude = max(
+            0,
+            self.stiffness * (vector_norm - self.length),
+        )
+        force_vector = force_magnitude * cable_vector / vector_norm
+        return np.vstack((force_vector, -force_vector))
 
     def damping_forces(self, coordinates: ArrayLike, velocities: ArrayLike) -> NDArray:
         return np.zeros((2, self.dim))
 
     def elastic_energy(self, coordinates: ArrayLike) -> Float:
         coordinates = np.asarray(coordinates).reshape((2, self.dim))
-
-        ###### Instructions ######
-        # Compute the elastic energy stored in the cable.
-        ### Input:  `coordinates` as in the `elastic_forces` method.
-        ### Output: `elastic_energy` should represent the elastic energy stored in the cable.
-
-        # YOUR CODE STARTS HERE
-
-        elastic_energy = (
+        return (
             0.5
             * self.stiffness
             * max(
@@ -100,10 +79,6 @@ class Cable(Element):
             )
             ** 2
         )
-
-        # YOUR CODE ENDS HERE, THE VARIABLE `elastic_energy` SHOULD HAVE BEEN DEFINED
-
-        return elastic_energy
 
     def kinetic_energy(self, coordinates: ArrayLike, velocities: ArrayLike) -> Float:
         velocities = np.asarray(velocities).reshape((2, self.dim))
