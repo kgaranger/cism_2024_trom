@@ -119,41 +119,71 @@ class Bar(Element):
         # YOUR CODE STARTS HERE
 
         # Compute the vectors between each consecutive pair of nodes (`t` vectors).
-        bars_vecs = NotImplemented
+        bars_vecs = coordinates[1:, :] - coordinates[:-1, :]
 
         # Compute the actual lengths of the bar segments
-        bars_vecs_norms = NotImplemented
+        bars_vecs_norms = np.linalg.norm(bars_vecs, axis=1)
 
         # Compute the normalized vectors along the bar segments (`u` vectors).
-        n_bars_vecs = NotImplemented
+        n_bars_vecs = bars_vecs / bars_vecs_norms[:, None]
 
         # Compute the magnitudes of the elastic forces of the axial springs
-        ax_forces_mags = NotImplemented
+        ax_forces_mags = np.array([self.k1, self.k2, self.k1]) * (
+            np.array([self.l1, self.l2, self.l1]) - bars_vecs_norms
+        )
 
         # Compute the force vectors of the axial springs
-        ax_forces_vecs = NotImplemented
+        ax_forces_vecs = n_bars_vecs[:, :] * ax_forces_mags[:, None]
 
         # Compute the cross products between the successive `u` vectors
-        vecs_cross_prods = NotImplemented
+        vecs_cross_prods = np.cross(n_bars_vecs[:-1, :], n_bars_vecs[1:, :])
 
         # Compute the dot products between the successive `u` vectors
-        vecs_dot_prods = NotImplemented
+        vecs_dot_prods = (n_bars_vecs[:-1, :] * n_bars_vecs[1:, :]).sum(axis=1)
 
         # Compute the angles between the successive bar segments
-        thetas = NotImplemented
+        thetas = np.arctan2(np.linalg.norm(vecs_cross_prods, axis=1), vecs_dot_prods)
 
         # Compute the torque of each angular spring divided by the sine of the corresponding angle
         # (k_t * theta_i / sin(theta_i))
-        torques_per_sint = NotImplemented
+        torques_per_sint = self.kt / (
+            1 - thetas**2 / 6 + thetas**4 / 120 - thetas**6 / 5040 + thetas**8 / 362880
+        )
+
+        # Compute the vectors that when multiplied by their respective torque give the forces of each angular spring on
+        # its adjacent nodes
+        n_bars_vecs_per_n = n_bars_vecs / bars_vecs_norms[:, None]
+        torque_directions = np.cross(
+            np.vstack(
+                [n_bars_vecs_per_n[:-1, :].T, n_bars_vecs_per_n[1:, :].T]
+            ).T.reshape((-1, 2, self.dim)),
+            vecs_cross_prods[:, None, :],
+        )
 
         nodes_forces = np.zeros((4, self.dim))
 
         for i in range(3):
             # Add the forces of spring i to the forces of its two adjacent nodes
-            pass
+            nodes_forces[i, :] -= ax_forces_vecs[i, :]
+            nodes_forces[i + 1, :] += ax_forces_vecs[i, :]
         for i in range(2):
             # Add the forces of the angular spring i to the three forces it acts on
-            pass
+            f1 = (
+                np.cross(n_bars_vecs[i, :] / bars_vecs_norms[i], vecs_cross_prods[i, :])
+                * torques_per_sint[i]
+            )
+
+            nodes_forces[i, :] += f1
+            nodes_forces[i + 1, :] -= f1
+            f2 = (
+                np.cross(
+                    n_bars_vecs[i + 1, :] / bars_vecs_norms[i + 1],
+                    vecs_cross_prods[i, :],
+                )
+                * torques_per_sint[i]
+            )
+            nodes_forces[i + 2, :] += f2
+            nodes_forces[i + 1, :] -= f2
 
         # YOUR CODE ENDS HERE, THE VARIABLE `nodes_forces` SHOULD HAVE BEEN DEFINED
 
@@ -172,7 +202,21 @@ class Bar(Element):
 
         # YOUR CODE STARTS HERE
 
-        elastic_energy = NotImplemented
+        bars_vecs = coordinates[1:, :] - coordinates[:-1, :]
+        bars_vecs_norms = np.linalg.norm(bars_vecs, axis=1)
+        n_bars_vecs = bars_vecs / bars_vecs_norms[:, np.newaxis]
+        ax_energies = (
+            0.5
+            * np.array([self.k1, self.k2, self.k1])
+            * (np.array([self.l1, self.l2, self.l1]) - bars_vecs_norms) ** 2
+        )
+
+        vecs_cross_prods = np.cross(n_bars_vecs[:-1, :], n_bars_vecs[1:, :])
+        vecs_dot_prods = (n_bars_vecs[:-1, :] * n_bars_vecs[1:, :]).sum(axis=1)
+        thetas = np.arctan2(np.linalg.norm(vecs_cross_prods, axis=1), vecs_dot_prods)
+        ang_energies = 0.5 * self.kt * thetas**2
+
+        elastic_energy = ax_energies.sum() + ang_energies.sum()
 
         # YOUR CODE ENDS HERE, THE VARIABLE `elastic_energy` SHOULD HAVE BEEN DEFINED
 
