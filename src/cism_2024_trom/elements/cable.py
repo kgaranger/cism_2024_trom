@@ -55,6 +55,7 @@ class Cable(Element):
         #           - The square root function is available in the numpy module as `np.sqrt`.
         #           - The dot product of two vectors `a` and `b` can be computed as `np.dot(a, b)`.
         #           - Your implementation can assume that self.dim is equal to 3 for the tests to pass.
+        #           - The variable `self.stiffness` is the stiffness of the cable.
 
         # YOUR CODE STARTS HERE
 
