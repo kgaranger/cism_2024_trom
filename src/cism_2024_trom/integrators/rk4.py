@@ -12,8 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .bar import Bar, Bar2D, Bar3D
-from .cable import Cable, Cable2D, Cable3D
-from .disk_cross_section import DiskCrossSection
-from .hollow_disk_cross_section import HollowDiskCrossSection
-from .material import Material
+from typing import Callable
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
+
+class RK4Integrator:
+    def __init__(self, f: Callable[[ArrayLike], NDArray], dt: float):
+        self.f = f
+        self.dt = dt
+
+    def step(self, x: NDArray) -> NDArray:
+        k1 = self.f(x)
+        k2 = self.f(x + 0.5 * self.dt * k1)
+        k3 = self.f(x + 0.5 * self.dt * k2)
+        k4 = self.f(x + self.dt * k3)
+        return x + self.dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)

@@ -19,10 +19,11 @@ from dataclasses import InitVar, dataclass, field
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from cism_2024_trom.typing import Float
+
 from .circular_cross_section import CircularCrossSection
 from .element import Element
 from .material import Material
-from .typing import Float
 
 
 @dataclass(kw_only=True)

@@ -16,11 +16,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from cism_2024_trom.typing import Float
 from numpy import floating
 from numpy.typing import ArrayLike, NDArray
 
 from .material import Material
-from .typing import Float
 
 
 @dataclass(kw_only=True)
